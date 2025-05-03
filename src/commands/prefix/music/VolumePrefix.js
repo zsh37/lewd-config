@@ -1,15 +1,16 @@
 const { EmbedBuilder } = require("discord.js");
 
 module.exports = {
-  name: "skip",
+  name: "volume",
   category: "Music",
-  description: "Skip current playing track.",
-  args: false,
-  usage: "",
+  description: "Set new volume for the player.",
+  args: true,
+  usage: "<scale>",
   permission: [],
-  aliases: ["next", "s"],
+  aliases: ["vol"],
 
   run: async (message, args, client, prefix) => {
+    const scale = parseInt(args[0]);
     const player = client.manager.players.get(message.guild.id);
 
     if (!player) {
@@ -51,22 +52,38 @@ module.exports = {
       });
     }
 
-    let songTitle;
-    let songUrl;
+    if (!scale) {
+      return message.reply({
+        embeds: [
+          new EmbedBuilder()
+            .setColor(client.embedColor)
+            .setDescription(
+              `:musical_note: | Player volume is set to: **${player.volume}**`
+            ),
+        ],
+      });
+    } else {
+      if (isNaN(scale)) {
+        return message.reply({
+          embeds: [
+            new EmbedBuilder()
+              .setColor(client.embedColor)
+              .setDescription(`:x: | Volume must be a valid number.`),
+          ],
+        });
+      }
 
-    songTitle = player.current.info.title;
-    songUrl = player.current.info.uri;
+      await player.setVolume(scale);
 
-    await player.stop();
-
-    return message.reply({
-      embeds: [
-        new EmbedBuilder()
-          .setColor(client.embedColor)
-          .setDescription(
-            `:white_check_mark: | Skipped [\`${songTitle}\`](${songUrl}).`
-          ),
-      ],
-    });
+      return message.reply({
+        embeds: [
+          new EmbedBuilder()
+            .setColor(client.embedColor)
+            .setDescription(
+              `:white_check_mark: | Player volume is now set to: **${scale}**`
+            ),
+        ],
+      });
+    }
   },
 };
